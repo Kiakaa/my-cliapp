@@ -20,8 +20,8 @@
       "prefix": "app",
       "styles": [
         "styles.css",
-        "../node_modules/_bootstrap@4.0.0@bootstrap/dist/css/bootstrap.min.css",
-        "../node_modules/_ngx-toastr@8.1.0@ngx-toastr/toastr.css"
+        "../node_modules/bootstrap/dist/css/bootstrap.min.css",
+        "../node_modules/ngx-toastr/toastr.css"
       ],
       "scripts": [],
       "environmentSource": "environments/environment.ts",
