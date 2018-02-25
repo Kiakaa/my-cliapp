@@ -1,25 +1,34 @@
 import {Injectable} from "@angular/core";
 import {HttpUtil} from "../util/http.util";
+import { error } from "util";
 
 @Injectable()//缺少此行页面无法显示。
 export class ChatService{
   private baseUrl = "/fcat-user/v1/tUser";
   constructor(private httpUtil: HttpUtil){
   }
-  getToken():string
-  {
-    return "token01";
-  }
   Login(account:string)
   {
-    let url = "/login/login";
-    let param = {'account':account};
-    return  this.httpUtil.postForm(url,"admin")
+    let url = "/login/login";    
+    let formData: FormData = new FormData();
+    formData.append('account', account);
+    return  this.httpUtil.postForm(url,formData)
     
+  }
+  GetLoginUserInfo()
+  {
+    let url="/chat/GetLoginUserInfo";
+    return this.httpUtil.postWithNopara(url);
   }
   getChatHistory(){
     let url = "/home/GetNGChatHistorys";
-    return  this.httpUtil.get(url);
+    return  this.httpUtil.get(url);/*
+    .subscribe((success)=>
+    {
+      console.log(success);
+    },(error)=>{
+      console.log(error);
+    });*/
   }
 
   setLocalSessionInfo(sessionInfo:any){

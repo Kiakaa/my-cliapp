@@ -18,9 +18,13 @@ import {HttpUtil} from "./util/http.util";
 import { ChatService } from './service/ChatService'
 import { Config} from './app-config'
 import {AuthInterceptor } from './util/AuthInterceptor'
+
+import {StorageUtil} from "./util/storage.util"
+import {WebChatComponent} from "./webChat.component"
+import {Room} from "./room/room.model"
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,WebChatComponent
   ],
   imports: [
     BrowserModule,
@@ -28,14 +32,15 @@ import {AuthInterceptor } from './util/AuthInterceptor'
     FormsModule,
     BsDropdownModule.forRoot(),
     BrowserAnimationsModule, // required animations module
-    ToastrModule.forRoot(), // ToastrModule added
+    ToastrModule.forRoot() // ToastrModule added
   ],
   providers: [
+    StorageUtil,
    HttpUtil,ChatService,Config,
    { provide: LocationStrategy, useClass: HashLocationStrategy },
    [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
    ]
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [WebChatComponent]
 })
 export class AppModule {  }

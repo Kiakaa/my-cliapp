@@ -14,6 +14,7 @@ import { Body } from "@angular/http/src/body";
 import { HttpParams } from "@angular/common/http";
 import { Response } from "@angular/http";
 import { HttpResponse } from "@angular/common/http/src/response";
+import { Message } from "../message/message.model";
 
 
 @Injectable()
@@ -23,6 +24,11 @@ export class HttpUtil{
   constructor(private config:Config, private http: HttpClient){
     let app = config.appConfig;
     this.baseUrl = app.baseUrl;
+  }
+  postWithNopara(url:string){
+    url = this.baseUrl + url;
+    //无参，body设置为null
+    return this.http.post(url,null).catch(this.handleError)
   }
 
   post(url:string, param:string){
@@ -51,28 +57,25 @@ export class HttpUtil{
     );
       /*.map(this.extractData)
       .catch(this.handleError);*/
-
   }
-  postForm(url:string, param?:any){
+  postForm(url:string, param:FormData){
     url = this.baseUrl + url;
     //let headers = new Headers({ 'X-Requested-With' :'XMLHttpRequest'});
     //let options = new RequestOptions({ withCredentials: this.withCredentials});
     //let options = new HttpHeaders({ 'withCredentials' :this.withCredentials});
-    let formData: FormData = new FormData();
-    formData.append('account', param);
     /*
     , {
       headers: new HttpHeaders().set('withCredentials', this.withCredentials)
     }
      */
     //noinspection TypeScriptValidateTypes
-    return this.http.post(url, formData).subscribe(
+    return this.http.post(url, param).catch(this.handleError);/*.subscribe(
       (success)=>{
         console.log(success);
       },(error)=>{
         console.log(error);
       }
-    );
+    );*/
 
   }
 
@@ -119,35 +122,34 @@ export class HttpUtil{
       headers: new HttpHeaders().set('withCredentials', this.withCredentials).set('Token', "Token001")
     }
      */
-    return  this.http.get(url).subscribe(
+    return  this.http.get(url);/*.subscribe(
       success=>{
         console.log(success);
-      },error=>{
-        console.log(error);
-      }//this.extractData
-    );
-      /*.map(this.extractData)
+      },
+      this.handleError
+    );*/
+      /*.map((res:Response)=>{return res;})
       .catch(this.handleError);*/
   }
 
-
   private extractData(res: Response) {
     //sessionStorage.setItem("X-Token",res.headers.get("x-token"));
-    console.log(res);
-    return res;
+    let body = res.json();
+    return body || { };
   }
 
    private handleError (error: Response | any) {
     // In a real world app, you might use a remote logging infrastructure
     let errMsg: string;
     if (error instanceof Response) {
-      const body = error.json() || '';
+     /* const body = error.json() || '';
       const err = JSON.stringify(body);//body.error || JSON.stringify(body);
-      errMsg = `${error.status} - ${error.statusText || ''} ${err}`;
+      */
+      errMsg = `${error.status} - ${error.statusText || ''} ${error}`;
     } else {
       errMsg = error.message ? error.message : error.toString();
     }
-    console.error(errMsg);
+    console.error("ErrorMsg:"+errMsg);
     return Observable.throw(errMsg);
   }
 }
