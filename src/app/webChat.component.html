@@ -2,13 +2,12 @@
     <div class="row">
         <div class="col-md-4 border">
             <ul class="list-unstyled">
-                <li>a</li>
-                <li>b</li>
-                <li>c</li>
+                <li *ngIf="!isNotOnline">当前在线人数：{{currentCounts}}</li>
+                <li *ngFor="let nickNm of nickNames">{{nickNm}}</li>
             </ul>
         </div>
         <div class="col-md-8 border">
-            <div *ngIf="isNotOnline">
+            <div>
                 <form class="form-inline">
                     <div class="form-group">
                         <label class="sr-only" for="inputNickName">NickName</label>
@@ -19,39 +18,29 @@
                             <input type="text" class="form-control" id="inputNickName" [(ngModel)]="nickName" name="NickName" placeholder="NickName">
                         </div>
                         <select class="form-control" [(ngModel)]="selectedValue" (change)="roomSelected()" name="room">
-                            <option *ngFor="let room of rooms" value="{{room.url}}">{{room.name}}</option>
+                            <option *ngFor="let room of rooms" value="{{room.url}}" >{{room.name}}</option>
                         </select>
                     </div>
-                    <button type="button" class="btn btn-primary" (click)="login()">login</button>
+                    <button type="button" class="btn btn-primary" (click)="login()">{{isNotOnline?"进入":"退出"}}</button>
                 </form>
             </div>
 
             <div class="card">
                 <div class="card-body messageContainer messageListScroll">
                     <small class="text-muted">
-                        <!--<ul *ngFor="let item of items">
-
-                        </ul>>-->
-
-                        <!--<ul *ngIf="messagesObservable | async as messages else empty">
-                        <ul *ngIf="messagesObservable | async as messages else empty"></ul>
-                            <li *ngFor="let message of messages">
-                                {{message.accountName}}:{{message.updateTime|date:'yyyy/MM/dd HH:mm:ss'}}
-                            {{message|json}}
-                            </li> 
-                          </ul>-->
                         <ul>
-                            <li *ngFor="let message of messagesObservable">
-                                {{message.accountName}}:{{message.updateTime|date:'yyyy/MM/dd HH:mm:ss'}} {{message|json}}
+                            <li *ngFor="let message of chatMSGs">
+                                {{message.SendTime}}
+                                <br> {{message.Auth}}:{{message.Message}}
                             </li>
                         </ul>
                     </small>
                 </div>
-                <div class="input-group">
-                    <textarea type="text" class="form-control flex-wrap." placeholder="Input Message"></textarea>
+                <div class="input-group" *ngIf="!isNotOnline">
+                    <textarea type="text" class="form-control flex-wrap." placeholder="Input Message" [(ngModel)]="msg" (keydown)="onKeydown($event)"></textarea>
                     <div class="input-group-append">
-                        <button class="btn btn-outline-secondary" type="button">Send</button>
-                        <button class="btn btn-outline-secondary" type="button">Exit</button>
+                        <button class="btn btn-outline-secondary" type="button" (click)="sendMessage()">Send</button>
+                        <button class="btn btn-outline-secondary" type="button" (click)="exit()">Exit</button>
                     </div>
                 </div>
             </div>

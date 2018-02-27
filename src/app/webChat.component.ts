@@ -3,7 +3,8 @@ import { Component, OnInit } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
 
 import { Injectable } from '@angular/core';
-import {Room} from './room/room.model'
+//import { Room } from './room/room.model'
+//import { transition } from '@angular/animations/src/animation_metadata';
 
 @Component({
     selector: 'web-chat',
@@ -12,39 +13,134 @@ import {Room} from './room/room.model'
 
 @Injectable()
 export class WebChatComponent implements OnInit {
-    nickName = "admin";
+    nickName:string;
     isNotOnline = true;
-    rom1:Room=new Room("ws://172.20.123.48:4141/chat","聊天室1")
-    rom2:Room=new Room("ws://120.79.9.246/chat","聊天室2")
-    //rooms: Room[];
-    rooms: { url: string, name: string }[] ;
-    room:{rul:string,name:string};
-    selectedValue="";
-    constructor(private toastr: ToastrService) { }
-    ngOnInit(): void {
-        //this.getChatHistory();
-        //this.rooms.push(this.rom1);
-        //rooms: Room[this.rom1,this.rom2];
+    ws: WebSocket;
+    SocketCreated: boolean;
+    msg: string;             //消息
+
+    nickNames: string[];    //在线数列表
+    currentCounts:number;   //在线人数
+    rooms: { url: string, name: string }[];//聊天室房间
+
+    chatMSGs:{Auth:string,Type:number,Message:string,Action:number,SendTime?:string}[] =[];//消息格式
+    selectedValue:string;//选中的房间
+
+    constructor(private toastr: ToastrService) {
+
+        this.nickName = "Kiaka";
+        console.log(this.nickName);
+
+        this.isNotOnline = true;
+        this.nickNames = [];
+
         this.rooms = [
-            { "url": "ws://172.20.123.48:4141/chat", "name": "聊天室1" },
-            { "url": "ws://120.79.9.246/chat", "name": "聊天室2" }
+            { "url": "ws://172.20.114.21:4141/chat", "name": "聊天室1" }
         ];
-        //this.rooms=rs;
-        console.log(this.rooms);
+        this.selectedValue =this.rooms[0].url;
     }
-    logWebSocket()
-    {
-        var exampleSocket = new WebSocket("ws://www.immaohai.com/");
+    ngOnInit(): void {
     }
-    roomSelected()
-    {
+    roomSelected() {
         this.toastr.info(this.selectedValue);
         console.log(this.selectedValue);
     }
-    login()
-    {
-        //this.toastr.info(room.)
-        this.toastr.info(this.selectedValue);
-        console.log(this.selectedValue);
+    check() {
+        this.toastr.info(this.nickName + "m");
+        this.login();
+        this.toastr.info(this.nickName + "N");
     }
+    login() {
+        if (this.isNotOnline) {
+            this.toastr.info(this.nickName + ":1");
+            this.ws = new WebSocket(this.selectedValue);
+            this.SocketCreated = true;
+            this.ws.onopen = (evt) => {
+                this.ws.send("{Auth:'" + this.nickName + "',Type:'1',Message:'" + this.nickName + "',Action:'1'}");
+            };
+            this.ws.onmessage = (event) => {
+                console.log(event.data);
+                var data = JSON.parse(event.data);
+                //Type=1:登录与退出
+                if (data.Type === 1) {
+                    //登录与退出 失败(昵称冲突..)
+                    if (data.State == false) {
+                        this.toastr.error(data.Message);
+                        console.log(data.Message);
+                        return;
+                    }
+                    //在线列表                    
+                    let temp: string = data.Message;
+                    //登录
+                    if (data.Action == 1) {
+                        temp.split(",").forEach(
+                            (val, idx, array) => {
+                                // val: 当前值
+                                // idx：当前index
+                                // array: Array
+                                //加入新成员
+                                console.log(idx.toString() + ":" + val);
+                                if (this.nickNames.indexOf(val) < 0) {
+                                    this.nickNames.push(val);
+                                }
+                            }
+                        );
+                    } else {//登出
+                        temp.split(",")
+                        this.nickNames.forEach(
+                            (val, idx, array) => {
+                                // val: 当前值
+                                // idx：当前index
+                                // array: Array
+                                //移除离开的成员
+                                console.log(idx.toString() + ":" + val);
+                                if (temp.indexOf(val) < 0) {
+                                    this.nickNames.splice(idx, 1)
+                                }
+                            }
+                        );
+                        //this.chatMSGs=[]; 退出记录不清空。
+                    }
+                    console.log("temp:" + temp);
+                }
+                else{//消息
+                    this.chatMSGs.push(data);
+                }
+                this.currentCounts=this.nickNames.length;
+            }
+            this.ws.onclose = this.onClose;
+            this.ws.onerror = this.onError;
+            this.isNotOnline = false;
+            this.toastr.info(this.nickName + ":x");
+        }
+        else
+        {
+            this.exit();
+        }
+    }
+    onOpen(event: Event) { };
+    onClose(event: CloseEvent) { };
+    onError(event: Event) { }
+    onMessage(event: MessageEvent) { }
+
+    sendMessage(): void {
+        this.ws.send("{Auth:'" + this.nickName + "',Type:\"2\",Message:'" + this.msg + "',Action:\"3\"}");
+        this.msg="";
+    }
+    exit(): void {
+        if (this.SocketCreated && (this.ws.readyState == 0 || this.ws.readyState == 1)) {
+            this.ws.close();
+            this.isNotOnline=true;
+            this.nickNames = [];
+        }
+        else{
+            this.toastr.warning("您当前为离线状态，请刷新页面重新进入！");
+        }
+    }
+    //Ctrl+Enter 发送消息
+    onKeydown(event:KeyboardEvent) {
+        if (event.key === "Enter"&& event.ctrlKey) {
+          this.sendMessage();
+        }
+      }
 }
