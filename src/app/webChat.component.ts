@@ -1,10 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-
 import { ToastrService } from 'ngx-toastr';
-
 import { Injectable } from '@angular/core';
-//import { Room } from './room/room.model'
-//import { transition } from '@angular/animations/src/animation_metadata';
 
 @Component({
     selector: 'web-chat',
@@ -35,24 +31,26 @@ export class WebChatComponent implements OnInit {
         this.nickNames = [];
 
         this.rooms = [
-            { "url": "ws://172.20.114.21:4141/chat", "name": "聊天室1" }
+            { "url": "ws://120.79.9.246:4141/chat", "name": "聊天室1" }
         ];
         this.selectedValue =this.rooms[0].url;
     }
     ngOnInit(): void {
     }
     roomSelected() {
-        this.toastr.info(this.selectedValue);
         console.log(this.selectedValue);
     }
     check() {
-        this.toastr.info(this.nickName + "m");
         this.login();
-        this.toastr.info(this.nickName + "N");
     }
     login() {
         if (this.isNotOnline) {
-            this.toastr.info(this.nickName + ":1");
+            if(this.nickName.trim().length==0)
+            {
+                this.toastr.error("请输入昵称！");
+                return;
+            }
+
             this.ws = new WebSocket(this.selectedValue);
             this.SocketCreated = true;
             this.ws.onopen = (evt) => {
@@ -73,6 +71,12 @@ export class WebChatComponent implements OnInit {
                     let temp: string = data.Message;
                     //登录
                     if (data.Action == 1) {
+                        //登录失败
+                        if(!data.State)
+                        {
+                            this.toastr.error("登录失败，请刷新再试！");
+                            return;
+                        }
                         temp.split(",").forEach(
                             (val, idx, array) => {
                                 // val: 当前值
@@ -111,7 +115,6 @@ export class WebChatComponent implements OnInit {
             this.ws.onclose = this.onClose;
             this.ws.onerror = this.onError;
             this.isNotOnline = false;
-            this.toastr.info(this.nickName + ":x");
         }
         else
         {
@@ -124,6 +127,11 @@ export class WebChatComponent implements OnInit {
     onMessage(event: MessageEvent) { }
 
     sendMessage(): void {
+        if(this.msg.trim().length==0)
+        {
+            this.toastr.warning("不能发送空白消息！");
+            return;
+        }
         this.ws.send("{Auth:'" + this.nickName + "',Type:\"2\",Message:'" + this.msg + "',Action:\"3\"}");
         this.msg="";
     }
